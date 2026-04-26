@@ -1,0 +1,1454 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>C&I 360 – Opportunity Redesign</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+/* ── Reset & tokens ─────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+–sf-blue:       #0176d3;
+–sf-blue-dark:  #014486;
+–sf-blue-light: #e8f4fd;
+–sf-cloud:      #f3f3f3;
+–sf-border:     #dddbda;
+–sf-text:       #181818;
+–sf-muted:      #706e6b;
+–sf-success:    #2e844a;
+–sf-warning:    #fe9339;
+–sf-danger:     #c23934;
+–sf-purple:     #6929c4;
+–sf-teal:       #0e7490;
+
+/* New accent – a warm slate that’s distinctly not stock SF */
+–accent:        #1B4F72;
+–accent-light:  #d6eaf8;
+–sla-green:     #d5f5e3;
+–sla-red:       #fde8e8;
+–cap-green:     #27ae60;
+
+–font: ‘IBM Plex Sans’, sans-serif;
+–mono: ‘IBM Plex Mono’, monospace;
+–radius: 6px;
+–shadow-sm: 0 1px 4px rgba(0,0,0,.10);
+–shadow-md: 0 4px 16px rgba(0,0,0,.12);
+}
+
+body {
+font-family: var(–font);
+font-size: 13px;
+background: #f0f0ef;
+color: var(–sf-text);
+min-width: 1200px;
+}
+
+/* ── Global Nav ─────────────────────────────────────────────────────── */
+.global-nav {
+background: #032d60;
+height: 48px;
+display: flex;
+align-items: center;
+padding: 0 16px;
+gap: 16px;
+position: sticky;
+top: 0;
+z-index: 100;
+box-shadow: 0 2px 8px rgba(0,0,0,.25);
+}
+.global-nav .logo {
+width: 32px; height: 32px;
+background: #fff;
+border-radius: 50%;
+display: flex; align-items: center; justify-content: center;
+flex-shrink: 0;
+}
+.global-nav .logo svg { width: 20px; height: 20px; }
+.global-nav .app-name {
+color: #fff;
+font-weight: 700;
+font-size: 14px;
+letter-spacing: .3px;
+white-space: nowrap;
+}
+.global-nav .search-bar {
+flex: 1; max-width: 480px; margin: 0 auto;
+background: rgba(255,255,255,.15);
+border: 1px solid rgba(255,255,255,.25);
+border-radius: 20px;
+display: flex; align-items: center;
+padding: 0 12px; gap: 8px;
+color: rgba(255,255,255,.8);
+font-size: 13px;
+height: 32px;
+}
+.global-nav .search-bar input {
+background: none; border: none; outline: none;
+color: #fff; font-family: var(–font); font-size: 13px; flex: 1;
+}
+.global-nav .search-bar input::placeholder { color: rgba(255,255,255,.6); }
+.nav-icons { display: flex; gap: 4px; margin-left: auto; }
+.nav-icons button {
+background: none; border: none; cursor: pointer;
+color: rgba(255,255,255,.85); width: 32px; height: 32px;
+border-radius: 50%; display: flex; align-items: center; justify-content: center;
+font-size: 16px; transition: background .15s;
+}
+.nav-icons button:hover { background: rgba(255,255,255,.15); }
+.avatar {
+width: 30px; height: 30px; border-radius: 50%;
+background: linear-gradient(135deg, #27ae60, #2e86c1);
+display: flex; align-items: center; justify-content: center;
+color: #fff; font-weight: 700; font-size: 12px; cursor: pointer;
+}
+
+/* ── App Nav Bar ─────────────────────────────────────────────────────── */
+.app-nav {
+background: #fff;
+border-bottom: 1px solid var(–sf-border);
+display: flex; align-items: center;
+padding: 0 16px;
+height: 40px;
+gap: 2px;
+overflow-x: auto;
+}
+.app-nav-item {
+padding: 0 12px; height: 40px;
+display: flex; align-items: center;
+font-size: 13px; font-weight: 500;
+color: var(–sf-muted);
+border-bottom: 2px solid transparent;
+cursor: pointer; white-space: nowrap;
+transition: color .15s, border-color .15s;
+gap: 4px;
+}
+.app-nav-item:hover { color: var(–sf-blue); }
+.app-nav-item.active { color: var(–sf-blue); border-bottom-color: var(–sf-blue); }
+.app-nav-item .chevron { font-size: 10px; opacity: .6; }
+
+/* ── Breadcrumb ──────────────────────────────────────────────────────── */
+.breadcrumb {
+padding: 8px 16px;
+font-size: 12px;
+color: var(–sf-muted);
+display: flex; align-items: center; gap: 6px;
+}
+.breadcrumb a { color: var(–sf-blue); text-decoration: none; }
+.breadcrumb a:hover { text-decoration: underline; }
+
+/* ── Three-column shell ──────────────────────────────────────────────── */
+.page-shell {
+display: grid;
+grid-template-columns: 260px 1fr 300px;
+gap: 0;
+min-height: calc(100vh - 88px);
+}
+
+/* ── LEFT RAIL ───────────────────────────────────────────────────────── */
+.left-rail {
+background: #fff;
+border-right: 1px solid var(–sf-border);
+padding: 12px 0;
+overflow-y: auto;
+}
+.rail-section-hdr {
+padding: 8px 16px 4px;
+font-size: 11px; font-weight: 700;
+text-transform: uppercase; letter-spacing: .8px;
+color: var(–sf-muted);
+display: flex; align-items: center; justify-content: space-between;
+cursor: pointer;
+}
+.rail-section-hdr .toggle { font-size: 10px; transition: transform .2s; }
+.activity-filters {
+padding: 8px 16px;
+display: flex; gap: 6px; flex-wrap: wrap;
+}
+.filter-pill {
+background: var(–sf-cloud);
+border: 1px solid var(–sf-border);
+border-radius: 12px;
+padding: 2px 10px;
+font-size: 11px;
+cursor: pointer;
+transition: all .15s;
+}
+.filter-pill:hover, .filter-pill.active {
+background: var(–accent-light);
+border-color: var(–sf-blue);
+color: var(–sf-blue);
+}
+.activity-empty {
+padding: 16px;
+text-align: center;
+color: var(–sf-muted);
+font-size: 12px;
+line-height: 1.5;
+}
+.btn-show-all {
+display: block; margin: 8px 16px;
+background: var(–sf-blue);
+color: #fff; border: none; border-radius: var(–radius);
+padding: 6px 12px; font-size: 12px; font-weight: 600;
+cursor: pointer; text-align: center;
+transition: background .15s;
+}
+.btn-show-all:hover { background: var(–sf-blue-dark); }
+
+/* Recent items */
+.recent-item {
+display: flex; align-items: flex-start; gap: 10px;
+padding: 10px 16px;
+border-top: 1px solid var(–sf-border);
+}
+.recent-icon {
+width: 28px; height: 28px; border-radius: 4px;
+background: #ff5722;
+display: flex; align-items: center; justify-content: center;
+flex-shrink: 0; font-size: 14px;
+}
+.recent-item-body { font-size: 12px; line-height: 1.6; }
+.recent-item-body a { color: var(–sf-blue); text-decoration: none; font-weight: 600; }
+.recent-item-body .meta { color: var(–sf-muted); font-size: 11px; }
+
+/* SLA summary in left rail — NEW UX ADDITION */
+.sla-card {
+margin: 12px 16px;
+border-radius: var(–radius);
+border: 1px solid;
+padding: 10px 12px;
+font-size: 12px;
+}
+.sla-card.active {
+background: var(–sla-green);
+border-color: #27ae60;
+}
+.sla-card.hold {
+background: var(–sla-red);
+border-color: var(–sf-danger);
+}
+.sla-card .sla-label {
+font-weight: 700; font-size: 11px; text-transform: uppercase;
+letter-spacing: .5px; margin-bottom: 4px;
+}
+.sla-card.active .sla-label { color: #1a6b35; }
+.sla-card.hold   .sla-label { color: var(–sf-danger); }
+.sla-timer { font-family: var(–mono); font-size: 20px; font-weight: 600; }
+.sla-card.active .sla-timer { color: #145a32; }
+.sla-card.hold   .sla-timer { color: var(–sf-danger); }
+
+/* ── MAIN CONTENT ────────────────────────────────────────────────────── */
+.main-content {
+overflow-y: auto;
+display: flex;
+flex-direction: column;
+}
+
+/* Record header */
+.record-header {
+background: #fff;
+border-bottom: 1px solid var(–sf-border);
+padding: 14px 20px 0;
+}
+.record-meta {
+display: flex; align-items: flex-start; justify-content: space-between;
+gap: 16px; margin-bottom: 12px;
+}
+.record-type-badge {
+font-size: 11px; font-weight: 600; text-transform: uppercase;
+letter-spacing: .6px; color: var(–sf-muted); margin-bottom: 2px;
+display: flex; align-items: center; gap: 6px;
+}
+.record-icon-inline {
+width: 20px; height: 20px; border-radius: 3px;
+background: #ff5722; display: inline-flex;
+align-items: center; justify-content: center; font-size: 11px;
+}
+.record-id {
+font-size: 22px; font-weight: 700; color: var(–sf-blue);
+letter-spacing: -.3px; cursor: pointer;
+display: flex; align-items: center; gap: 8px;
+}
+.record-id:hover { text-decoration: underline; }
+
+/* Validation badges — NEW */
+.validation-badges {
+display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
+margin-top: 4px;
+}
+.badge {
+display: inline-flex; align-items: center; gap: 4px;
+padding: 3px 8px; border-radius: 10px;
+font-size: 11px; font-weight: 600; letter-spacing: .2px;
+}
+.badge-validated { background: #d5f5e3; color: #145a32; }
+.badge-unvalidated { background: #fde8e8; color: #c23934; }
+.badge-legal-hold  { background: #fef3c7; color: #92400e; }
+.badge-mmkt        { background: #ede9fe; color: #5b21b6; }
+.badge-forecasted  { background: #dbeafe; color: #1e40af; }
+.badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+/* Action buttons row */
+.action-row {
+display: flex; align-items: center; gap: 8px;
+}
+.btn {
+display: inline-flex; align-items: center; gap: 5px;
+padding: 0 14px; height: 32px;
+border-radius: var(–radius);
+font-size: 13px; font-weight: 600; font-family: var(–font);
+cursor: pointer; border: 1px solid; transition: all .15s;
+white-space: nowrap;
+}
+.btn-primary {
+background: var(–sf-blue); color: #fff; border-color: var(–sf-blue);
+}
+.btn-primary:hover { background: var(–sf-blue-dark); border-color: var(–sf-blue-dark); }
+.btn-outline {
+background: #fff; color: var(–sf-text); border-color: var(–sf-border);
+}
+.btn-outline:hover { background: var(–sf-cloud); }
+.btn-success {
+background: var(–sf-success); color: #fff; border-color: var(–sf-success);
+}
+.btn-danger-outline {
+background: #fff; color: var(–sf-danger); border-color: var(–sf-danger);
+}
+.btn-caret {
+padding: 0 8px; border-left: none; border-radius: 0 var(–radius) var(–radius) 0;
+}
+.btn-group { display: flex; }
+.btn-group .btn:first-child { border-radius: var(–radius) 0 0 var(–radius); }
+.btn-group .btn-caret { border-left: 1px solid rgba(255,255,255,.4); }
+
+/* KPI strip */
+.kpi-strip {
+display: grid;
+grid-template-columns: repeat(6, 1fr);
+gap: 0;
+border-top: 1px solid var(–sf-border);
+margin-top: 12px;
+}
+.kpi-cell {
+padding: 10px 14px;
+border-right: 1px solid var(–sf-border);
+cursor: pointer;
+transition: background .15s;
+}
+.kpi-cell:last-child { border-right: none; }
+.kpi-cell:hover { background: var(–sf-cloud); }
+.kpi-label {
+font-size: 11px; color: var(–sf-muted); margin-bottom: 3px;
+display: flex; align-items: center; gap: 4px;
+}
+.kpi-label .info-icon { font-size: 10px; opacity: .7; cursor: help; }
+.kpi-value {
+font-size: 15px; font-weight: 700; color: var(–sf-text);
+}
+.kpi-value.blue  { color: var(–sf-blue); }
+.kpi-value.green { color: var(–sf-success); }
+.kpi-value.warn  { color: var(–sf-warning); }
+.kpi-sub { font-size: 10px; color: var(–sf-muted); margin-top: 1px; }
+
+/* Chevron stage bar */
+.stage-bar {
+background: #fff;
+border-bottom: 2px solid var(–sf-border);
+padding: 0 20px;
+}
+.chevrons {
+display: flex; align-items: stretch;
+height: 42px; gap: 0; position: relative;
+}
+.chevron {
+display: flex; align-items: center; justify-content: center;
+padding: 0 20px 0 28px;
+font-size: 12px; font-weight: 600;
+position: relative; cursor: pointer;
+clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%, 14px 50%);
+transition: filter .15s;
+white-space: nowrap;
+min-width: 100px; flex: 1;
+}
+.chevron:first-child {
+clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%);
+padding-left: 16px;
+}
+.chevron:last-child {
+clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 14px 50%);
+}
+.chevron:hover { filter: brightness(.92); }
+.chev-done     { background: #d5f5e3; color: #145a32; }
+.chev-active   { background: var(–sf-blue); color: #fff; }
+.chev-new      { background: #e0f2fe; color: #0369a1; } /* new “Scoping” stage */
+.chev-future   { background: var(–sf-cloud); color: var(–sf-muted); }
+.chev-closed   { background: #f1f5f9; color: var(–sf-muted); }
+.chev-new-badge {
+position: absolute; top: 4px; right: 20px;
+background: var(–cap-green); color: #fff;
+font-size: 8px; font-weight: 800; padding: 1px 4px; border-radius: 3px;
+letter-spacing: .3px;
+}
+
+.stage-meta {
+padding: 8px 0 10px;
+display: flex; align-items: center; justify-content: space-between;
+flex-wrap: wrap; gap: 8px;
+}
+.stage-label { font-size: 12px; font-weight: 600; color: var(–sf-muted); }
+.stage-label span { color: var(–sf-blue); }
+
+/* Guidance box */
+.guidance-box {
+margin: 0 20px 16px;
+background: #f8fbff;
+border: 1px solid #b3d4f5;
+border-left: 4px solid var(–sf-blue);
+border-radius: var(–radius);
+padding: 14px 16px;
+font-size: 12.5px;
+}
+.guidance-box h4 {
+font-size: 12px; font-weight: 700; margin-bottom: 8px;
+color: var(–accent); letter-spacing: .2px;
+display: flex; align-items: center; gap: 6px;
+}
+.guidance-box ol { padding-left: 20px; }
+.guidance-box li { margin-bottom: 6px; line-height: 1.5; color: var(–sf-text); }
+
+/* ── NOTICE BANNER (SLA / validation) ───────────────────────────────── */
+.notice-banner {
+margin: 0 20px 12px;
+border-radius: var(–radius);
+padding: 10px 14px;
+display: flex; align-items: flex-start; gap: 10px;
+font-size: 12.5px;
+}
+.notice-banner.info  { background: var(–accent-light); border: 1px solid #85c1e9; color: #154360; }
+.notice-banner.warn  { background: #fef3c7; border: 1px solid #fcd34d; color: #78350f; }
+.notice-banner.error { background: #fde8e8; border: 1px solid #f5c6cb; color: #7b1a1a; }
+.notice-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.notice-text strong { font-weight: 700; display: block; margin-bottom: 2px; }
+
+/* ── TABS ─────────────────────────────────────────────────────────────── */
+.detail-tabs {
+background: #fff;
+border-bottom: 1px solid var(–sf-border);
+display: flex; align-items: center; gap: 0;
+padding: 0 20px;
+}
+.tab {
+padding: 0 16px; height: 40px;
+display: flex; align-items: center;
+font-size: 13px; font-weight: 500; color: var(–sf-muted);
+border-bottom: 3px solid transparent;
+cursor: pointer; transition: all .15s;
+white-space: nowrap; gap: 5px;
+}
+.tab:hover { color: var(–sf-blue); }
+.tab.active { color: var(–sf-blue); border-bottom-color: var(–sf-blue); }
+.tab-count {
+background: var(–sf-cloud); border-radius: 10px;
+padding: 1px 6px; font-size: 11px;
+}
+.tab.active .tab-count { background: var(–accent-light); color: var(–sf-blue); }
+.tab-new-badge {
+background: var(–cap-green); color: #fff;
+font-size: 9px; font-weight: 800; padding: 1px 5px; border-radius: 3px;
+}
+
+/* ── DETAIL SECTIONS ─────────────────────────────────────────────────── */
+.detail-body {
+padding: 16px 20px;
+display: flex; flex-direction: column; gap: 14px;
+}
+
+.section-card {
+background: #fff;
+border: 1px solid var(–sf-border);
+border-radius: var(–radius);
+box-shadow: var(–shadow-sm);
+overflow: hidden;
+}
+.section-hdr {
+padding: 10px 16px;
+display: flex; align-items: center; justify-content: space-between;
+border-bottom: 1px solid var(–sf-border);
+cursor: pointer;
+background: var(–sf-cloud);
+}
+.section-hdr h3 {
+font-size: 13px; font-weight: 700; color: var(–sf-text);
+display: flex; align-items: center; gap: 7px;
+}
+.section-hdr .section-icon { font-size: 14px; }
+.section-toggle { color: var(–sf-muted); font-size: 11px; transition: transform .2s; }
+.section-body { padding: 14px 16px; }
+
+.field-grid {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 0;
+}
+.field-grid.three-col { grid-template-columns: 1fr 1fr 1fr; }
+
+.field-row {
+padding: 8px 10px;
+border-bottom: 1px solid #f0f0ef;
+border-right: 1px solid #f0f0ef;
+display: flex; flex-direction: column; gap: 2px;
+transition: background .12s;
+cursor: pointer;
+position: relative;
+}
+.field-row:hover { background: var(–sf-cloud); }
+.field-row:hover .field-edit-icon { opacity: 1; }
+.field-label {
+font-size: 11px; color: var(–sf-muted); font-weight: 500;
+display: flex; align-items: center; gap: 4px;
+}
+.field-label .fi { font-size: 10px; opacity: .7; cursor: help; }
+.field-value {
+font-size: 13px; color: var(–sf-text); font-weight: 500;
+min-height: 18px;
+}
+.field-value.link { color: var(–sf-blue); cursor: pointer; }
+.field-value.link:hover { text-decoration: underline; }
+.field-value.empty { color: var(–sf-muted); font-style: italic; font-weight: 400; }
+.field-value.highlight { color: var(–sf-success); font-weight: 700; }
+.field-edit-icon {
+position: absolute; top: 8px; right: 8px;
+opacity: 0; transition: opacity .15s;
+font-size: 12px; color: var(–sf-blue);
+}
+.field-new-tag {
+font-size: 9px; background: var(–cap-green); color: #fff;
+padding: 1px 4px; border-radius: 3px; font-weight: 700;
+margin-left: 4px; vertical-align: middle;
+}
+.field-full { grid-column: 1 / -1; }
+
+/* Probability visual — NEW UX */
+.prob-visual {
+margin-top: 6px;
+height: 6px; border-radius: 3px;
+background: #e2e8f0; overflow: hidden;
+}
+.prob-bar { height: 100%; border-radius: 3px; transition: width .4s ease; }
+
+/* AGM Incentive tracker mini-widget — NEW */
+.agm-widget {
+padding: 12px 16px;
+background: linear-gradient(135deg, #eaf6ff 0%, #f0fdf4 100%);
+border-top: 1px solid var(–sf-border);
+}
+.agm-widget-hdr {
+font-size: 11px; font-weight: 700; text-transform: uppercase;
+letter-spacing: .6px; color: var(–sf-muted); margin-bottom: 10px;
+display: flex; justify-content: space-between; align-items: center;
+}
+.agm-target-row {
+display: flex; gap: 12px; flex-wrap: wrap;
+}
+.agm-target-cell {
+flex: 1; min-width: 100px;
+background: #fff;
+border: 1px solid var(–sf-border);
+border-radius: var(–radius);
+padding: 8px 10px;
+}
+.agm-target-cell .atc-label { font-size: 10px; color: var(–sf-muted); margin-bottom: 2px; }
+.agm-target-cell .atc-val   { font-size: 15px; font-weight: 700; color: var(–accent); font-family: var(–mono); }
+.agm-progress {
+margin-top: 10px;
+}
+.agm-progress-label {
+font-size: 11px; color: var(–sf-muted);
+display: flex; justify-content: space-between; margin-bottom: 4px;
+}
+.agm-bar-track {
+height: 10px; background: #e2e8f0; border-radius: 5px; overflow: hidden;
+}
+.agm-bar-fill {
+height: 100%;
+background: linear-gradient(90deg, #27ae60, #2ecc71);
+border-radius: 5px;
+width: 68%;
+}
+
+/* NAICS drill-down visual — NEW */
+.naics-drilldown {
+display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
+padding: 8px 10px;
+background: #f8fbff;
+border: 1px dashed #b3d4f5;
+border-radius: var(–radius);
+margin-top: 4px;
+}
+.naics-level {
+display: flex; flex-direction: column;
+align-items: center;
+}
+.naics-level-label { font-size: 9px; color: var(–sf-muted); text-transform: uppercase; letter-spacing: .4px; }
+.naics-level-val {
+background: var(–sf-blue); color: #fff;
+font-family: var(–mono); font-size: 11px; font-weight: 600;
+padding: 3px 8px; border-radius: 4px; margin-top: 2px;
+}
+.naics-arrow { color: var(–sf-muted); font-size: 12px; margin-top: 10px; }
+.naics-autofilled {
+font-size: 10px; color: #1a6b35; background: #d5f5e3;
+padding: 2px 7px; border-radius: 10px; font-weight: 600;
+margin-top: 8px;
+}
+
+/* ── RIGHT RAIL ──────────────────────────────────────────────────────── */
+.right-rail {
+background: #fff;
+border-left: 1px solid var(–sf-border);
+overflow-y: auto;
+}
+.rail-card {
+border-bottom: 1px solid var(–sf-border);
+}
+.rail-card-hdr {
+padding: 10px 14px;
+display: flex; align-items: center; justify-content: space-between;
+cursor: pointer;
+transition: background .15s;
+}
+.rail-card-hdr:hover { background: var(–sf-cloud); }
+.rail-card-hdr h4 {
+font-size: 12px; font-weight: 700; color: var(–sf-text);
+display: flex; align-items: center; gap: 6px;
+}
+.rail-card-body { padding: 0 14px 12px; }
+
+.quick-link {
+display: flex; align-items: center; gap: 8px;
+padding: 7px 0;
+border-bottom: 1px solid var(–sf-border);
+cursor: pointer; text-decoration: none;
+color: var(–sf-blue); font-size: 12px;
+transition: color .12s;
+}
+.quick-link:last-child { border-bottom: none; }
+.quick-link:hover { color: var(–sf-blue-dark); }
+.quick-link .ql-icon {
+width: 20px; height: 20px; border-radius: 3px;
+display: flex; align-items: center; justify-content: center;
+font-size: 12px; flex-shrink: 0;
+}
+.quick-link .ql-count {
+margin-left: auto;
+background: var(–sf-cloud); border-radius: 10px;
+padding: 1px 6px; font-size: 10px; color: var(–sf-muted);
+}
+
+/* Ramp years list */
+.ramp-row {
+padding: 7px 0;
+border-bottom: 1px solid var(–sf-border);
+display: grid; grid-template-columns: 60px 1fr 1fr;
+gap: 8px; font-size: 11px;
+align-items: center;
+}
+.ramp-row:last-child { border-bottom: none; }
+.ramp-row a { color: var(–sf-blue); font-weight: 600; font-size: 11px; }
+.ramp-row .ramp-meta { color: var(–sf-muted); }
+.ramp-row .ramp-val  { font-family: var(–mono); font-size: 11px; }
+
+/* Validation SLA widget — RIGHT RAIL NEW */
+.sla-widget {
+margin: 10px 14px;
+border-radius: var(–radius);
+overflow: hidden;
+border: 1px solid #b3d4f5;
+}
+.sla-widget-hdr {
+background: var(–accent);
+color: #fff;
+padding: 7px 12px;
+font-size: 11px; font-weight: 700;
+text-transform: uppercase; letter-spacing: .5px;
+display: flex; align-items: center; justify-content: space-between;
+}
+.sla-widget-body { background: #f8fbff; padding: 10px 12px; }
+.sla-status-row {
+display: flex; align-items: center; gap: 8px;
+font-size: 12px; margin-bottom: 6px;
+}
+.sla-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.sla-dot.green { background: var(–cap-green); }
+.sla-dot.red   { background: var(–sf-danger); }
+.sla-dot.amber { background: var(–sf-warning); }
+.sla-timer-large {
+font-family: var(–mono); font-size: 24px; font-weight: 700;
+color: var(–accent); letter-spacing: -1px; text-align: center;
+padding: 4px 0;
+}
+.sla-widget-footer {
+padding: 6px 12px;
+font-size: 10px; color: var(–sf-muted);
+border-top: 1px solid #dbeafe;
+background: #eff6ff;
+}
+.sla-confirm-btn {
+display: block; width: 100%; margin-top: 8px;
+background: var(–sf-success); color: #fff;
+border: none; border-radius: var(–radius);
+padding: 6px 10px; font-size: 11px; font-weight: 700;
+cursor: pointer; text-align: center; font-family: var(–font);
+transition: background .15s;
+}
+.sla-confirm-btn:hover { background: #236b3e; }
+
+/* ── Responsive tooltip ──────────────────────────────────────────────── */
+[data-tip] { position: relative; }
+[data-tip]:hover::after {
+content: attr(data-tip);
+position: absolute; bottom: calc(100% + 4px); left: 50%;
+transform: translateX(-50%);
+background: #1a1a1a; color: #fff;
+font-size: 11px; padding: 4px 8px; border-radius: 4px;
+white-space: nowrap; pointer-events: none; z-index: 200;
+}
+
+/* ── Annotations (design notes for Salesforce meeting) ───────────────── */
+.design-note {
+display: inline-flex; align-items: center; gap: 4px;
+background: #fef3c7; border: 1px solid #fcd34d;
+border-radius: 4px; padding: 2px 7px;
+font-size: 10px; font-weight: 700; color: #78350f;
+cursor: pointer; margin-left: 6px; vertical-align: middle;
+}
+.design-note::before { content: ‘★’; }
+
+.annotation-bar {
+background: #fef9e7;
+border-top: 2px solid #f7dc6f;
+border-bottom: 1px solid #f0e68c;
+padding: 8px 20px;
+font-size: 11.5px; color: #7d6608;
+display: flex; align-items: center; gap: 8px;
+flex-wrap: wrap;
+}
+.annotation-bar strong { font-weight: 700; }
+.annot-pill {
+background: #f7dc6f; border-radius: 10px;
+padding: 2px 8px; font-weight: 600; font-size: 11px;
+color: #6b5100; cursor: pointer;
+}
+</style>
+
+</head>
+<body>
+
+<!-- ── ANNOTATION STRIP (for SF meeting context) ── -->
+
+<div class="annotation-bar">
+  <span>★</span>
+  <strong>Design Mockup for Salesforce Meeting</strong>
+  — Highlighted items below represent proposed Q4 overhaul enhancements.
+  <span class="annot-pill">🟢 New Functionality</span>
+  <span class="annot-pill">🔵 Modified</span>
+  <span class="annot-pill">⚫ Retired (not shown)</span>
+</div>
+
+<!-- ── GLOBAL NAV ── -->
+
+<nav class="global-nav">
+  <div class="logo">
+    <svg viewBox="0 0 24 24" fill="#0176d3"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+  </div>
+  <span class="app-name">C&amp;I 360</span>
+  <div class="search-bar">
+    <span>🔍</span>
+    <input type="text" placeholder="Search Salesforce..." />
+  </div>
+  <div class="nav-icons">
+    <button title="Home">⊞</button>
+    <button title="Favorites">☆</button>
+    <button title="Setup">⚙</button>
+    <button title="Notifications">🔔</button>
+    <button title="Help">?</button>
+  </div>
+  <div class="avatar" title="Robert Maddox">RM</div>
+</nav>
+
+<!-- ── APP NAV ── -->
+
+<nav class="app-nav">
+  <div class="app-nav-item">Home</div>
+  <div class="app-nav-item">Accounts <span class="chevron">▾</span></div>
+  <div class="app-nav-item">Leads <span class="chevron">▾</span></div>
+  <div class="app-nav-item">Contacts <span class="chevron">▾</span></div>
+  <div class="app-nav-item active">Opportunities <span class="chevron">▾</span></div>
+  <div class="app-nav-item">Reports <span class="chevron">▾</span></div>
+  <div class="app-nav-item">Account Competitors <span class="chevron">▾</span></div>
+  <div class="app-nav-item">Entergy Goals <span class="chevron">▾</span></div>
+  <div class="app-nav-item">Ramp Up Years <span class="chevron">▾</span></div>
+  <div class="app-nav-item">More <span class="chevron">▾</span></div>
+</nav>
+
+<!-- ── BREADCRUMB ── -->
+
+<div class="breadcrumb">
+  <a href="#">Opportunities</a> / <span>000161114319-</span>
+</div>
+
+<!-- ── THREE-COLUMN SHELL ── -->
+
+<div class="page-shell">
+
+  <!-- ═══════════════ LEFT RAIL ═══════════════ -->
+
+  <aside class="left-rail">
+
+```
+<!-- SLA Clock — NEW functionality in left rail -->
+<div style="padding: 8px 16px 0; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--sf-muted);">Validation SLA</div>
+<div class="sla-card active">
+  <div class="sla-label">⏱ Clock Running — Rate Admin Review</div>
+  <div class="sla-timer">4d 07:22:14</div>
+  <div style="font-size: 11px; margin-top: 4px; color: #1a6b35;">Contract submitted · SLA target: 10 business days</div>
+</div>
+
+<div class="rail-section-hdr">
+  Activity <span class="toggle">▾</span>
+</div>
+<div class="activity-filters">
+  <div class="filter-pill active">All</div>
+  <div class="filter-pill">Emails</div>
+  <div class="filter-pill">Tasks</div>
+  <div class="filter-pill">Calls</div>
+</div>
+<div class="activity-empty">
+  No activities to show.<br />
+  Try scheduling a task or sending an email.
+</div>
+<button class="btn-show-all">Show All Activities</button>
+
+<div class="rail-section-hdr" style="margin-top:8px;">
+  Upcoming &amp; Overdue <span class="toggle">▾</span>
+</div>
+<div class="activity-empty" style="padding:10px 16px;">No upcoming tasks.</div>
+
+<div class="rail-section-hdr" style="margin-top:8px;">
+  Recent Items <span class="toggle">▾</span>
+</div>
+<div class="recent-item">
+  <div class="recent-icon">👑</div>
+  <div class="recent-item-body">
+    <a href="#">000161114319-</a>
+    <div class="meta">DHS Clock: 8</div>
+    <div class="meta">Total Est. Load: 0 kW</div>
+    <div class="meta">Total Est. AGM: $0.00M</div>
+    <div class="meta">Owner: Robert Maddox</div>
+  </div>
+</div>
+```
+
+  </aside>
+
+  <!-- ═══════════════ MAIN CONTENT ═══════════════ -->
+
+  <main class="main-content">
+
+```
+<!-- Record Header -->
+<div class="record-header">
+  <div class="record-meta">
+    <div>
+      <div class="record-type-badge">
+        <span class="record-icon-inline">👑</span>
+        Growth Opportunity
+        <span class="design-note" data-tip="Renamed from 'HERO Opportunity' per Q4 overhaul">MODIFIED</span>
+      </div>
+      <div class="record-id">000161114319-</div>
+      <div class="validation-badges" style="margin-top:6px;">
+        <span class="badge badge-unvalidated"><span class="badge-dot"></span> AGM Not Validated</span>
+        <span class="badge badge-forecasted"><span class="badge-dot"></span> Forecasted · BP v2</span>
+        <span class="badge badge-mmkt"><span class="badge-dot"></span> MMKT</span>
+        <span class="design-note" data-tip="NEW: Status badges give at-a-glance project health">NEW UX</span>
+      </div>
+    </div>
+    <div class="action-row">
+      <button class="btn btn-outline">+ Follow</button>
+      <button class="btn btn-outline">Change Owner</button>
+      <button class="btn btn-outline">Edit</button>
+      <div class="btn-group">
+        <button class="btn btn-primary">Move to Scoping
+          <span class="design-note" data-tip="Renamed from 'Announced' per Q4 overhaul">MOD</span>
+        </button>
+        <button class="btn btn-primary btn-caret">▾</button>
+      </div>
+      <button class="btn btn-danger-outline">Move to Cancelled</button>
+    </div>
+  </div>
+
+  <!-- KPI Strip -->
+  <div class="kpi-strip">
+    <div class="kpi-cell" data-tip="Days in current stage">
+      <div class="kpi-label">DHS Clock <span class="info-icon">ℹ</span></div>
+      <div class="kpi-value warn">5</div>
+      <div class="kpi-sub">days active</div>
+    </div>
+    <div class="kpi-cell">
+      <div class="kpi-label">Total Est. Load Add. kW <span class="info-icon">ℹ</span></div>
+      <div class="kpi-value">—</div>
+      <div class="kpi-sub">not yet entered</div>
+    </div>
+    <div class="kpi-cell">
+      <div class="kpi-label">Total Est. AGM ($M) <span class="info-icon">ℹ</span></div>
+      <div class="kpi-value green">$0.00M</div>
+      <div class="kpi-sub">incentive yr 2026</div>
+    </div>
+    <div class="kpi-cell">
+      <div class="kpi-label">Win Probability <span class="info-icon">ℹ</span></div>
+      <div class="kpi-value blue">35%</div>
+      <div class="prob-visual"><div class="prob-bar" style="width:35%;background:var(--sf-blue);"></div></div>
+    </div>
+    <div class="kpi-cell">
+      <div class="kpi-label">Sector Health <span class="info-icon">ℹ</span></div>
+      <div class="kpi-value green">Healthy</div>
+      <div class="kpi-sub">Data Center · ESI</div>
+    </div>
+    <div class="kpi-cell">
+      <div class="kpi-label">Opportunity Owner</div>
+      <div class="kpi-value blue" style="font-size:13px;">Robert Maddox</div>
+      <div class="kpi-sub">ESI Management</div>
+    </div>
+  </div>
+</div>
+
+<!-- Stage Chevron Bar -->
+<div class="stage-bar">
+  <div class="chevrons">
+    <div class="chevron chev-done">✓ Active Project</div>
+    <div class="chevron chev-new">
+      Scoping
+      <span class="chev-new-badge">NEW</span>
+    </div>
+    <div class="chevron chev-future">Contract Neg.</div>
+    <div class="chevron chev-future">Signed ESA</div>
+    <div class="chevron chev-future" style="position:relative;">
+      Ramping
+      <span class="chev-new-badge" style="top:4px;right:8px;">NEW</span>
+    </div>
+    <div class="chevron chev-closed">Completed</div>
+  </div>
+  <div class="stage-meta">
+    <div class="stage-label">Current Stage: <span>Active Project</span></div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <span style="font-size:11px;color:var(--sf-muted);">Entergy Agreed ISD: <strong style="color:var(--sf-text);">—</strong></span>
+      <span style="font-size:11px;color:var(--sf-muted);">Target ESA: <strong style="color:var(--sf-text);">—</strong></span>
+      <button class="btn btn-success" style="height:28px;font-size:12px;">✓ Mark Stage as Complete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Notices -->
+<div style="padding: 12px 20px 0; display:flex; flex-direction:column; gap:8px;">
+  <div class="notice-banner warn">
+    <span class="notice-icon">⚠</span>
+    <div class="notice-text">
+      <strong>Project Win Probability health factors should be re-evaluated when the Stage changes.</strong>
+      Review sector health scores and update probability fields before advancing.
+    </div>
+  </div>
+  <div class="notice-banner info">
+    <span class="notice-icon">ℹ</span>
+    <div class="notice-text">
+      <strong>Entergy Agreed ISD required at Signed ESA.</strong>
+      This field will become mandatory when this opportunity advances to the Signed ESA stage. Enter a value early to avoid stage gate delays.
+      <span class="design-note">NEW</span>
+    </div>
+  </div>
+</div>
+
+<!-- Guidance -->
+<div class="guidance-box" style="margin-top:12px;">
+  <h4>📋 Guidance for Success</h4>
+  <ol>
+    <li>You will need at least 1 Ramp Year. Navigate to the Ramp Up Years related list on the right. Open Year 1 and fill in the values. If no years exist, use <strong>Add Ramp Year</strong>.</li>
+    <li>To move to <strong>Scoping</strong>, click the Move to Scoping button and complete all required fields. The project can be Cancelled at any time using the Move to Cancelled button.</li>
+    <li><strong>MMKT flag is active</strong> — this project will be excluded from Charles John's organic commercial growth totals to prevent double-counting.</li>
+  </ol>
+</div>
+
+<!-- ── TABS ── -->
+<div class="detail-tabs">
+  <div class="tab active">Details</div>
+  <div class="tab">Related</div>
+  <div class="tab">Transmission Planning <span class="tab-new-badge">NEW</span></div>
+  <div class="tab">Capital Projects <span class="tab-new-badge">NEW</span></div>
+  <div class="tab">Finance / FBP <span class="tab-new-badge">NEW</span></div>
+  <div class="tab">AGM &amp; Incentives <span class="tab-new-badge">NEW</span> <span class="tab-count">3</span></div>
+</div>
+
+<!-- ── DETAIL BODY ── -->
+<div class="detail-body">
+
+  <!-- Opportunity Information -->
+  <div class="section-card">
+    <div class="section-hdr">
+      <h3><span class="section-icon">📄</span> Opportunity Information</h3>
+      <span class="section-toggle">▾</span>
+    </div>
+    <div class="section-body" style="padding:0;">
+      <div class="field-grid">
+        <div class="field-row">
+          <div class="field-label">Territory</div>
+          <div class="field-value">ESI</div>
+          <span class="field-edit-icon">✏</span>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Stage</div>
+          <div class="field-value">Active Project</div>
+          <span class="field-edit-icon">✏</span>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Opportunity Owner Role</div>
+          <div class="field-value">ESI Management</div>
+          <span class="field-edit-icon">✏</span>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Lead Source <span class="fi" title="Required at Active Project stage">ℹ</span><span class="field-new-tag">MOD</span></div>
+          <div class="field-value empty">— Required at Active Project stage</div>
+          <span class="field-edit-icon">✏</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Project Details -->
+  <div class="section-card">
+    <div class="section-hdr">
+      <h3><span class="section-icon">🏗</span> Project Details</h3>
+      <span class="section-toggle">▾</span>
+    </div>
+    <div class="section-body" style="padding:0;">
+      <div class="field-grid">
+        <div class="field-row">
+          <div class="field-label">Project ID</div>
+          <div class="field-value">6109</div>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Facility Category <span class="field-new-tag">NAICS AUTO</span></div>
+          <div class="field-value">Data Center</div>
+          <span class="field-edit-icon">✏</span>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Opportunity Name</div>
+          <div class="field-value">000161114319-</div>
+          <span class="field-edit-icon">✏</span>
+        </div>
+        <div class="field-row">
+          <div class="field-label">IR Industry Segment <span class="field-new-tag">NAICS AUTO</span></div>
+          <div class="field-value">Technology</div>
+          <span class="field-edit-icon">✏</span>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Account Name</div>
+          <div class="field-value link">000161114319</div>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Facility Type <span class="field-new-tag">NAICS AUTO</span></div>
+          <div class="field-value">Hyperscale DC</div>
+          <span class="field-edit-icon">✏</span>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Type of Sale</div>
+          <div class="field-value empty">—</div>
+          <span class="field-edit-icon">✏</span>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Project Sensitivity <span class="fi" title="Confidential projects require special handling">ℹ</span></div>
+          <div class="field-value empty">—</div>
+          <span class="field-edit-icon">✏</span>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Under Construction? <span class="fi">ℹ</span></div>
+          <div class="field-value empty">—</div>
+          <span class="field-edit-icon">✏</span>
+        </div>
+        <div class="field-row">
+          <div class="field-label">CIAC ($M) <span class="field-new-tag">NEW</span></div>
+          <div class="field-value empty">— Pending field definition</div>
+          <span class="field-edit-icon">✏</span>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Term of Contract (months) <span class="field-new-tag">MOD</span></div>
+          <div class="field-value empty">—</div>
+          <span class="field-edit-icon">✏</span>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Substation Name <span class="field-new-tag">PICKLIST</span></div>
+          <div class="field-value empty">— Select substation</div>
+          <span class="field-edit-icon">✏</span>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Construction Start Quarter</div>
+          <div class="field-value empty">—</div>
+          <span class="field-edit-icon">✏</span>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Construction Start Year</div>
+          <div class="field-value empty">—</div>
+          <span class="field-edit-icon">✏</span>
+        </div>
+      </div>
+
+      <!-- NAICS Drill-Down — NEW -->
+      <div style="padding: 12px 16px; border-top: 1px solid var(--sf-border);">
+        <div class="field-label" style="margin-bottom:8px;">
+          NAICS Code — Progressive Drill-Down
+          <span class="field-new-tag">NEW</span>
+          <span class="design-note" data-tip="User enters 6-digit NAICS; Facility Category, Facility Type, and IR Segment auto-populate">UX PROPOSAL</span>
+        </div>
+        <div class="naics-drilldown">
+          <div class="naics-level">
+            <div class="naics-level-label">Sector</div>
+            <div class="naics-level-val">51</div>
+          </div>
+          <div class="naics-arrow">›</div>
+          <div class="naics-level">
+            <div class="naics-level-label">Subsector</div>
+            <div class="naics-level-val">517</div>
+          </div>
+          <div class="naics-arrow">›</div>
+          <div class="naics-level">
+            <div class="naics-level-label">Industry Group</div>
+            <div class="naics-level-val">5179</div>
+          </div>
+          <div class="naics-arrow">›</div>
+          <div class="naics-level">
+            <div class="naics-level-label">6-Digit NAICS</div>
+            <div class="naics-level-val">517919</div>
+          </div>
+          <div class="naics-autofilled">✓ 3 fields auto-populated</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Location & Coordinates -->
+  <div class="section-card">
+    <div class="section-hdr">
+      <h3><span class="section-icon">📍</span> Location &amp; Coordinates</h3>
+      <span class="section-toggle">▾</span>
+    </div>
+    <div class="section-body" style="padding:0;">
+      <div class="field-grid three-col">
+        <div class="field-row">
+          <div class="field-label">Service Location State <span class="field-new-tag">VALIDATED</span></div>
+          <div class="field-value">LA</div>
+          <span class="field-edit-icon">✏</span>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Service Location Zip <span class="field-new-tag">5-DIGIT</span></div>
+          <div class="field-value">70112</div>
+          <span class="field-edit-icon">✏</span>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Territory</div>
+          <div class="field-value">ESI</div>
+          <span class="field-edit-icon">✏</span>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Latitude <span class="fi" title="Decimal degrees, 5 places, no negatives">ℹ</span><span class="field-new-tag">VALIDATED</span></div>
+          <div class="field-value">29.95107</div>
+          <span class="field-edit-icon">✏</span>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Longitude <span class="fi" title="Decimal degrees, 5 places, no negatives">ℹ</span><span class="field-new-tag">VALIDATED</span></div>
+          <div class="field-value">90.07153</div>
+          <span class="field-edit-icon">✏</span>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Substation Name <span class="field-new-tag">PICKLIST</span></div>
+          <div class="field-value empty">— Select substation</div>
+          <span class="field-edit-icon">✏</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Probability & Forecast -->
+  <div class="section-card">
+    <div class="section-hdr">
+      <h3><span class="section-icon">📊</span> Probability &amp; Forecast</h3>
+      <span class="section-toggle">▾</span>
+    </div>
+    <div class="section-body" style="padding:0;">
+      <div class="field-grid">
+        <div class="field-row">
+          <div class="field-label">Project Win Probability (%) <span class="fi">ℹ</span></div>
+          <div class="field-value">35%</div>
+          <div class="prob-visual"><div class="prob-bar" style="width:35%;background:var(--sf-blue);"></div></div>
+          <span class="field-edit-icon">✏</span>
+        </div>
+        <div class="field-row">
+          <div class="field-label">BP Probability (%) <span class="fi" title="Capped at 100%">ℹ</span><span class="field-new-tag">CAP 100%</span></div>
+          <div class="field-value empty">—</div>
+          <span class="field-edit-icon">✏</span>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Load Factor (%) <span class="fi" title="Capped at 100%">ℹ</span><span class="field-new-tag">CAP 100%</span></div>
+          <div class="field-value empty">—</div>
+          <span class="field-edit-icon">✏</span>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Forecasted Load Factor (%) <span class="field-new-tag">CAP 100%</span></div>
+          <div class="field-value empty">—</div>
+          <span class="field-edit-icon">✏</span>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Project Forecasted?</div>
+          <div class="field-value">Yes</div>
+          <span class="field-edit-icon">✏</span>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Forecast Version <span class="fi">ℹ</span></div>
+          <div class="field-value">BP v2 · 2026</div>
+          <span class="field-edit-icon">✏</span>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Sector Health</div>
+          <div class="field-value highlight">Healthy</div>
+          <span class="field-edit-icon">✏</span>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Stakeholder Engagement Required? <span class="field-new-tag">RELOCATED</span></div>
+          <div class="field-value empty">—</div>
+          <span class="field-edit-icon">✏</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- AGM Incentive Widget -->
+    <div class="agm-widget">
+      <div class="agm-widget-hdr">
+        AGM Incentive Target Tracking — 2026
+        <span class="design-note">NEW</span>
+      </div>
+      <div class="agm-target-row">
+        <div class="agm-target-cell">
+          <div class="atc-label">BOY Target ($M)</div>
+          <div class="atc-val">$12.50</div>
+        </div>
+        <div class="agm-target-cell">
+          <div class="atc-label">Current AGM ($M)</div>
+          <div class="atc-val">$8.50</div>
+        </div>
+        <div class="agm-target-cell">
+          <div class="atc-label">AGM Validated?</div>
+          <div class="atc-val" style="color:var(--sf-danger);font-size:13px;">✗ No</div>
+        </div>
+        <div class="agm-target-cell">
+          <div class="atc-label">Probability of Target</div>
+          <div class="atc-val" style="color:var(--sf-warning);">68%</div>
+        </div>
+      </div>
+      <div class="agm-progress">
+        <div class="agm-progress-label">
+          <span>Progress to BOY Target</span>
+          <span>$8.50M / $12.50M</span>
+        </div>
+        <div class="agm-bar-track"><div class="agm-bar-fill"></div></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /detail-body -->
+```
+
+  </main>
+
+  <!-- ═══════════════ RIGHT RAIL ═══════════════ -->
+
+  <aside class="right-rail">
+
+```
+<!-- Validation SLA Widget — NEW -->
+<div class="rail-card">
+  <div class="rail-card-hdr">
+    <h4>⏱ Validation SLA <span class="design-note">NEW</span></h4>
+    <span style="font-size:10px;color:var(--sf-muted);">▾</span>
+  </div>
+  <div class="sla-widget">
+    <div class="sla-widget-hdr">
+      Rate Admin Review
+      <span style="font-size:10px;background:rgba(255,255,255,.2);padding:2px 6px;border-radius:3px;">RUNNING</span>
+    </div>
+    <div class="sla-widget-body">
+      <div class="sla-status-row">
+        <div class="sla-dot green"></div>
+        <span>Contract submitted to Rate Admin</span>
+      </div>
+      <div class="sla-status-row">
+        <div class="sla-dot amber"></div>
+        <span>Validation receipt pending</span>
+      </div>
+      <div class="sla-timer-large">4d 07:22</div>
+      <div style="text-align:center;font-size:11px;color:var(--sf-muted);">of 10 business days</div>
+      <button class="sla-confirm-btn">✓ Mark Validation Received</button>
+    </div>
+    <div class="sla-widget-footer">Legal Hold: <strong>No</strong> · Last updated by R. Maddox</div>
+  </div>
+</div>
+
+<!-- Knowledge -->
+<div class="rail-card">
+  <div class="rail-card-hdr">
+    <h4>📚 Knowledge</h4>
+  </div>
+  <div class="rail-card-body">
+    <div style="display:flex;gap:6px;">
+      <input style="flex:1;border:1px solid var(--sf-border);border-radius:var(--radius);padding:5px 8px;font-size:12px;font-family:var(--font);outline:none;" placeholder="Search Knowledge..." />
+      <button class="btn btn-outline" style="height:30px;font-size:11px;">Filters</button>
+    </div>
+  </div>
+</div>
+
+<!-- Related List Quick Links -->
+<div class="rail-card">
+  <div class="rail-card-hdr">
+    <h4>🔗 Related List Quick Links</h4>
+  </div>
+  <div class="rail-card-body">
+    <a class="quick-link" href="#">
+      <span class="ql-icon" style="background:#0176d3;color:#fff;">👥</span>
+      Opportunity Team <span class="ql-count">0</span>
+    </a>
+    <a class="quick-link" href="#">
+      <span class="ql-icon" style="background:#e67e22;color:#fff;">📈</span>
+      Ramp Up Years <span class="ql-count">7</span>
+    </a>
+    <a class="quick-link" href="#">
+      <span class="ql-icon" style="background:#8e44ad;color:#fff;">📝</span>
+      Notes <span class="ql-count">0</span>
+    </a>
+    <a class="quick-link" href="#">
+      <span class="ql-icon" style="background:#7f8c8d;color:#fff;">📎</span>
+      Notes &amp; Attachments <span class="ql-count">0</span>
+    </a>
+    <a class="quick-link" href="#">
+      <span class="ql-icon" style="background:#27ae60;color:#fff;">🕒</span>
+      Stage History <span class="ql-count">2</span>
+    </a>
+    <a class="quick-link" href="#">
+      <span class="ql-icon" style="background:#c0392b;color:#fff;">📋</span>
+      Opportunity Field History <span class="ql-count">10+</span>
+    </a>
+    <a class="quick-link" href="#">
+      <span class="ql-icon" style="background:#2e86c1;color:#fff;">🔷</span>
+      Class 3 Estimates <span class="ql-count">0</span>
+      <span class="field-new-tag" style="margin-left:4px;">NEW</span>
+    </a>
+    <a class="quick-link" href="#">
+      <span class="ql-icon" style="background:#2e86c1;color:#fff;">🔷</span>
+      Class 5 Estimates <span class="ql-count">0</span>
+      <span class="field-new-tag" style="margin-left:4px;">NEW</span>
+    </a>
+  </div>
+</div>
+
+<!-- Ramp Up Years -->
+<div class="rail-card">
+  <div class="rail-card-hdr">
+    <h4>📈 Ramp Up Years (7)</h4>
+    <button class="btn btn-outline" style="height:24px;font-size:11px;padding:0 8px;">+ Add</button>
+  </div>
+  <div class="rail-card-body">
+    <div style="display:grid;grid-template-columns:60px 70px 1fr;gap:4px;padding:4px 0 6px;font-size:10px;font-weight:700;color:var(--sf-muted);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--sf-border);">
+      <span>ID</span><span>Year</span><span>Annual Est. Load</span>
+    </div>
+    <div class="ramp-row"><a href="#">RY-6224</a><span class="ramp-meta">Year 1</span><span class="ramp-val">0 kW</span></div>
+    <div class="ramp-row"><a href="#">RY-6225</a><span class="ramp-meta">Year 2</span><span class="ramp-val">0 kW</span></div>
+    <div class="ramp-row"><a href="#">RY-6226</a><span class="ramp-meta">Year 3</span><span class="ramp-val">0 kW</span></div>
+    <div class="ramp-row"><a href="#">RY-6227</a><span class="ramp-meta">Year 4</span><span class="ramp-val">0 kW</span></div>
+    <div class="ramp-row"><a href="#">RY-6228</a><span class="ramp-meta">Year 5</span><span class="ramp-val">0 kW</span></div>
+    <div class="ramp-row"><a href="#">RY-6229</a><span class="ramp-meta">Year 6</span><span class="ramp-val">0 kW</span></div>
+    <div class="ramp-row"><a href="#">RY-6230</a><span class="ramp-meta">Year 7</span><span class="ramp-val">0 kW</span></div>
+    <a href="#" style="display:block;text-align:center;font-size:11px;color:var(--sf-blue);padding:8px 0;text-decoration:none;">View All</a>
+  </div>
+</div>
+
+<!-- Files -->
+<div class="rail-card">
+  <div class="rail-card-hdr"><h4>📁 Files (0)</h4></div>
+  <div class="rail-card-body" style="text-align:center;padding:14px;">
+    <button class="btn btn-outline" style="width:100%;justify-content:center;">⬆ Upload Files</button>
+    <div style="font-size:11px;color:var(--sf-muted);margin-top:6px;">Or drop files here</div>
+  </div>
+</div>
+
+<!-- Labels -->
+<div class="rail-card">
+  <div class="rail-card-hdr"><h4># Labels (0)</h4></div>
+  <div class="rail-card-body">
+    <input style="width:100%;border:1px solid var(--sf-border);border-radius:var(--radius);padding:5px 8px;font-size:12px;font-family:var(--font);outline:none;" placeholder="Type a topic name…" />
+  </div>
+</div>
+```
+
+  </aside>
+</div>
+
+<script>
+// Minimal interactivity for demo feel
+document.querySelectorAll('.section-hdr').forEach(hdr => {
+  hdr.addEventListener('click', () => {
+    const body = hdr.nextElementSibling;
+    const toggle = hdr.querySelector('.section-toggle');
+    if (body) {
+      const collapsed = body.style.display === 'none';
+      body.style.display = collapsed ? '' : 'none';
+      if (toggle) toggle.style.transform = collapsed ? '' : 'rotate(-90deg)';
+    }
+  });
+});
+document.querySelectorAll('.rail-card-hdr').forEach(hdr => {
+  hdr.addEventListener('click', () => {
+    const body = hdr.nextElementSibling;
+    if (body && body.classList.contains('rail-card-body')) {
+      body.style.display = body.style.display === 'none' ? '' : 'none';
+    }
+    const sla = hdr.nextElementSibling;
+    if (sla && sla.classList.contains('sla-widget')) {
+      sla.style.display = sla.style.display === 'none' ? '' : 'none';
+    }
+  });
+});
+document.querySelectorAll('.chevron').forEach(ch => {
+  ch.addEventListener('click', () => {
+    document.querySelectorAll('.chevron').forEach(c => {
+      c.classList.remove('chev-active');
+      if (!c.classList.contains('chev-done') && !c.classList.contains('chev-new') && !c.classList.contains('chev-closed'))
+        c.classList.add('chev-future');
+    });
+    ch.classList.remove('chev-future', 'chev-new');
+    ch.classList.add('chev-active');
+  });
+});
+// Animate SLA timer
+let totalSeconds = 4 * 86400 + 7 * 3600 + 22 * 60 + 14;
+function pad(n) { return String(n).padStart(2, '0'); }
+setInterval(() => {
+  totalSeconds++;
+  const d = Math.floor(totalSeconds / 86400);
+  const h = Math.floor((totalSeconds % 86400) / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  const str = `${d}d ${pad(h)}:${pad(m)}:${pad(s)}`;
+  document.querySelectorAll('.sla-timer, .sla-timer-large').forEach(el => el.textContent = str.replace(':'+pad(s),''));
+}, 1000);
+</script>
+
+</body>
+</html>
